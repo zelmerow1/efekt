@@ -1,7 +1,7 @@
 {
   "name": "efektmotylaa",
   "version": "1.0.0",
-  "description": "Efekt Motyla",
+  "description": "Efekt Motyla - API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
