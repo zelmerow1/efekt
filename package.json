@@ -1,11 +1,10 @@
 {
   "name": "efektmotylaa",
   "version": "1.0.0",
-  "type": "module",
   "description": "Efekt Motyla",
-  "main": "api/confirm.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node api/confirm.js"
+    "start": "node server.js"
   },
   "dependencies": {}
 }
