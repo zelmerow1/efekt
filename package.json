@@ -1,7 +1,8 @@
 {
-  "name": "efekt-motylaa",
+  "name": "efektmotylaa",
   "version": "1.0.0",
-  "description": "Efekt Motyla - odbierz nagrodę",
+  "type": "module",
+  "description": "Efekt Motyla",
   "main": "api/confirm.js",
   "scripts": {
     "start": "node api/confirm.js"
